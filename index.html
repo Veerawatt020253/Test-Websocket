@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pose Classifier — Realtime Test</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>Pose Classifier — Realtime Test</h1>
+
+  <div class="row controls">
+    <input id="wsUrl" type="text" size="34" />
+    <button id="connectBtn">Connect</button>
+    <button id="camBtn" disabled>Start Camera</button>
+    <span id="status" class="status off">disconnected</span>
+  </div>
+
+  <div class="row main">
+    <div class="view">
+      <canvas id="canvas" width="480" height="640"></canvas>
+      <video id="video" autoplay playsinline muted hidden></video>
+    </div>
+
+    <div class="panel">
+      <div class="bigLabel">
+        <span id="label">—</span>
+        <span id="conf"></span>
+      </div>
+      <div id="bars"></div>
+      <div id="meta" class="meta"></div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+* { box-sizing: border-box; }
+body {
+  font-family: system-ui, sans-serif;
+  margin: 16px;
+  background: #111;
+  color: #eee;
+}
+h1 { font-size: 18px; margin: 0 0 12px; }
+.row { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+.controls { margin-bottom: 14px; align-items: center; }
+input, button {
+  font-size: 14px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid #444;
+  background: #222;
+  color: #eee;
+}
+button { cursor: pointer; }
+button:disabled { opacity: .4; cursor: not-allowed; }
+.status { padding: 4px 10px; border-radius: 10px; font-size: 13px; }
+.status.off { background: #532; color: #f99; }
+.status.on  { background: #253; color: #9f9; }
+
+.view { background: #000; border: 1px solid #333; border-radius: 8px; }
+#canvas { display: block; width: 480px; height: 640px; max-width: 90vw; }
+
+.panel { min-width: 280px; flex: 1; }
+.bigLabel { font-size: 30px; font-weight: 700; margin-bottom: 12px; }
+#conf { font-size: 18px; color: #9cf; margin-left: 8px; }
+
+.bar { margin: 4px 0; font-size: 13px; }
+.bar .name { display: inline-block; width: 130px; }
+.bar .track { display: inline-block; width: 160px; height: 12px;
+  background: #333; border-radius: 6px; vertical-align: middle; overflow: hidden; }
+.bar .fill { display: block; height: 100%; background: #4a90d9; width: 0%; }
+.bar.top .fill { background: #4caf50; }
+.bar .pct { margin-left: 6px; color: #aaa; }
+.meta { margin-top: 12px; font-size: 12px; color: #888; }
