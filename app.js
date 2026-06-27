@@ -25,7 +25,10 @@ let classes = [];
 let edges = [];
 let latest = null;        // last result from server
 let streaming = false;    // camera on + ws open
-const SEND_W = 480;       // width of frames sent to server
+let inflight = 0;         // frames sent but not yet answered
+const MAX_INFLIGHT = 2;   // pipeline depth: overlap network RTT with server compute
+                          // (1 = strict ping-pong; higher = more fps, a touch more lag)
+const SEND_W = 360;       // width of frames sent to server
 
 // hidden canvas used to grab + compress frames
 const grab = document.createElement("canvas");
@@ -55,6 +58,7 @@ function disconnect() { if (ws) ws.close(); }
 function cleanupWs() {
   ws = null;
   streaming = false;
+  inflight = 0;
   connectBtn.textContent = "Connect";
   camBtn.disabled = true;
 }
@@ -69,8 +73,8 @@ function onMessage(msg) {
   // result
   latest = msg;
   updatePanel(msg);
-  // ping-pong: ask for the next frame now that this one is done
-  if (streaming) sendFrame();
+  inflight = Math.max(0, inflight - 1);
+  pump();   // keep the pipeline full (uses the spare server CPU during network RTT)
 }
 
 // ---- Camera -------------------------------------------------------------
@@ -94,12 +98,25 @@ camBtn.onclick = async () => {
 function maybeStartStreaming() {
   if (ws && ws.readyState === WebSocket.OPEN && video.srcObject && !streaming) {
     streaming = true;
-    sendFrame();   // kick off the ping-pong loop
+    pump();   // kick off the pipelined loop
+  }
+}
+
+// Keep up to MAX_INFLIGHT frames in flight so the server never idles waiting for
+// the next frame to arrive over the network.
+function pump() {
+  while (streaming && ws && ws.readyState === WebSocket.OPEN
+         && video.videoWidth && inflight < MAX_INFLIGHT) {
+    inflight++;
+    sendFrame();
   }
 }
 
 function sendFrame() {
-  if (!ws || ws.readyState !== WebSocket.OPEN || !video.videoWidth) return;
+  if (!ws || ws.readyState !== WebSocket.OPEN || !video.videoWidth) {
+    inflight = Math.max(0, inflight - 1);
+    return;
+  }
   const w = SEND_W;
   const h = Math.round(w * video.videoHeight / video.videoWidth);
   grab.width = w; grab.height = h;
@@ -107,6 +124,8 @@ function sendFrame() {
   grab.toBlob((blob) => {
     if (blob && ws && ws.readyState === WebSocket.OPEN)
       blob.arrayBuffer().then((b) => ws.send(b));
+    else
+      inflight = Math.max(0, inflight - 1);   // send failed -> free the slot
   }, "image/jpeg", 0.6);
 }
 
