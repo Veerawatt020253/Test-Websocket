@@ -37,3 +37,10 @@ button:disabled { opacity: .4; cursor: not-allowed; }
 .bar.top .fill { background: #4caf50; }
 .bar .pct { margin-left: 6px; color: #aaa; }
 .meta { margin-top: 12px; font-size: 12px; color: #888; }
+
+.htest { margin-top: 18px; padding-top: 14px; border-top: 1px solid #333; }
+#hesBtn { background: #2a4; border-color: #2a4; color: #fff; font-weight: 700; }
+#hesBtn:disabled { opacity: .4; }
+#hesState { margin-left: 10px; }
+.hesCue { margin-top: 12px; font-size: 26px; font-weight: 800; color: #9f9; min-height: 32px; }
+.hesScore { margin-top: 6px; font-size: 20px; color: #9cf; min-height: 26px; }

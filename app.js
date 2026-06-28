@@ -14,6 +14,11 @@ const metaEl = $("meta");
 const video = $("video");
 const canvas = $("canvas");
 const ctx = canvas.getContext("2d");
+const hesBtn = $("hesBtn");
+const hesState = $("hesState");
+const hesCue = $("hesCue");
+const hesScore = $("hesScore");
+let hesActive = false, hesShown = false, hesTimeout = null;
 
 // default WS URL based on how the page is served
 const proto = location.protocol === "https:" ? "wss" : "ws";
@@ -61,6 +66,8 @@ function cleanupWs() {
   inflight = 0;
   connectBtn.textContent = "Connect";
   camBtn.disabled = true;
+  hesBtn.disabled = true;
+  endHesTest();
 }
 
 function onMessage(msg) {
@@ -70,11 +77,55 @@ function onMessage(msg) {
     buildBars();
     return;
   }
+  if (msg.type === "cue") {           // server started the Hesitation Test clock
+    hesCue.textContent = "DO:  " + msg.target;
+    hesState.textContent = "measuring…";
+    return;
+  }
   // result
   latest = msg;
   updatePanel(msg);
+  if (hesActive && msg.hesitation) handleHesitation(msg.hesitation);
   inflight = Math.max(0, inflight - 1);
   pump();   // keep the pipeline full (uses the spare server CPU during network RTT)
+}
+
+function handleHesitation(h) {
+  if (h.hesitation_ms != null && !hesShown) {
+    hesShown = true;
+    hesState.textContent = "";
+    hesScore.textContent = `Hesitation: ${Math.round(h.hesitation_ms)} ms (${h.rating})`;
+  }
+  if (h.movement_ms != null) {        // movement finished -> trial complete
+    hesScore.textContent =
+      `Hesitation: ${Math.round(h.hesitation_ms)} ms (${h.rating})  ·  ` +
+      `Move: ${Math.round(h.movement_ms)} ms`;
+    endHesTest();
+  }
+}
+
+function startHesTest() {
+  if (!ws || ws.readyState !== WebSocket.OPEN || hesActive) return;
+  hesActive = true; hesShown = false;
+  hesBtn.disabled = true;
+  hesCue.textContent = ""; hesScore.textContent = "";
+  hesState.textContent = "get ready…";
+  const wait = 1000 + Math.random() * 1500;     // random foreperiod (no anticipation)
+  setTimeout(() => {
+    if (!ws || ws.readyState !== WebSocket.OPEN) { endHesTest(); return; }
+    ws.send(JSON.stringify({ type: "cue" }));    // server picks target + starts clock
+    hesState.textContent = "GO!";
+    hesTimeout = setTimeout(() => {
+      if (!hesShown) hesScore.textContent = "no movement (timeout)";
+      hesCue.textContent = ""; endHesTest();
+    }, 5000);
+  }, wait);
+}
+
+function endHesTest() {
+  hesActive = false;
+  if (hesTimeout) { clearTimeout(hesTimeout); hesTimeout = null; }
+  hesBtn.disabled = !(ws && ws.readyState === WebSocket.OPEN && streaming);
 }
 
 // ---- Camera -------------------------------------------------------------
@@ -98,9 +149,12 @@ camBtn.onclick = async () => {
 function maybeStartStreaming() {
   if (ws && ws.readyState === WebSocket.OPEN && video.srcObject && !streaming) {
     streaming = true;
+    hesBtn.disabled = false;
     pump();   // kick off the pipelined loop
   }
 }
+
+hesBtn.onclick = startHesTest;
 
 // Keep up to MAX_INFLIGHT frames in flight so the server never idles waiting for
 // the next frame to arrive over the network.

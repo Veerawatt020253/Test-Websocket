@@ -15,6 +15,11 @@ python -m http.server 5500
 > กล้องเบราว์เซอร์ทำงานเฉพาะบน `localhost` หรือ `https://` เท่านั้น
 > ถ้า host จริง ต้องเสิร์ฟหน้านี้ผ่าน HTTPS และ backend ผ่าน `wss://`
 
+## Hesitation Test (biomarker)
+กด **Hesitation Test** → รอสุ่ม 1-2 วิ → ขึ้นท่าให้ทำ (เช่น "DO: ArmUp") → ระบบจับเวลา
+ตั้งแต่ขึ้นท่าจนเริ่มขยับจริง = **Hesitation Score (ms)** บ่งชี้ motor planning delay
+(วัดแม่นกว่าใน desktop app เพราะไม่มี network)
+
 ## ไฟล์
 - `index.html` — โครงหน้า
 - `style.css` — สไตล์เรียบ ๆ
